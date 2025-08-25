@@ -15,7 +15,6 @@ st.set_page_config(
 )
 
 # --- Gemini API Functions ---
-# This function remains unchanged
 def get_gemini_analysis(api_key, risk_profile, portfolio_data=None, portfolio_image=None):
     try:
         genai.configure(api_key=api_key)
@@ -42,29 +41,38 @@ def get_gemini_analysis(api_key, risk_profile, portfolio_data=None, portfolio_im
         """
 
         if portfolio_image:
-            prompt_parts = [ f"...", portfolio_image ] # The long prompt string is omitted for brevity but is the same
-        elif portfolio_data:
-            prompt_parts = [ f"..." ] # The long prompt string is omitted for brevity but is the same
-        else:
-            return None
-
-        # The actual prompts are long, so we'll just use the logic from the last working file.
-        # This is just a placeholder to show that the function logic is identical.
-        # The key change is how the api_key is retrieved *before* calling this function.
-        # The full prompt code from the last version should be here.
-        
-        # (The full, long prompts from the previous step go here)
-        # For brevity, I am not re-pasting the 30+ line prompts, but they should be here.
-        
-        # Let's re-paste the full function for clarity.
-        if portfolio_image:
             prompt_parts = [
-                f"""You are an expert global financial analyst AI...""", # The full image prompt
+                f"""You are an expert global financial analyst AI. Your task is to analyze the provided portfolio screenshot. First, perform OCR to extract all tickers and their values. Then, perform a full financial analysis and return the result as a single, clean JSON object. Do not include any text or markdown before or after the JSON.
+
+                **Analysis Requirements:**
+                1.  **OCR and Data Extraction:** Read all tickers and investment values from the image.
+                2.  **Country Identification:** Determine the primary stock market country from the tickers.
+                3.  **Sector Analysis:** Perform a sector allocation analysis.
+                4.  **Diversification Assessment:** Provide an assessment based on a '{risk_profile}' risk profile.
+                5.  **Country-Specific Recommendations:** All suggested ETFs and companies MUST be relevant to the identified country's stock market.
+
+                **Required JSON Output Structure:**
+                {json_structure}
+                """,
                 portfolio_image
             ]
         elif portfolio_data:
             prompt_parts = [
-                f"""You are an expert global financial analyst AI...""" # The full text prompt
+                f"""You are an expert global financial analyst AI. Your task is to analyze the provided portfolio data (in CSV format) and return your analysis as a single, clean JSON object. Do not include any text or markdown before or after the JSON.
+
+                **Portfolio Data:**
+                ```csv
+                {portfolio_data}
+                ```
+                **Analysis Requirements:**
+                1.  **Country Identification:** Determine the primary stock market country from the tickers.
+                2.  **Sector Analysis:** Perform a sector allocation analysis.
+                3.  **Diversification Assessment:** Provide an assessment based on a '{risk_profile}' risk profile.
+                4.  **Country-Specific Recommendations:** All suggested ETFs and companies MUST be relevant to the identified country's stock market.
+
+                **Required JSON Output Structure:**
+                {json_structure}
+                """
             ]
         else:
             return None
@@ -87,15 +95,8 @@ if 'analysis_report' not in st.session_state:
 
 with st.sidebar:
     st.header("⚙️ Configuration")
-    
-    # --- THIS IS THE KEY CHANGE ---
-    # We no longer ask the user for the key in a text box.
-    # We securely access it from Streamlit's secrets manager.
-    # On your local machine, this will not find a key unless you create a secrets.toml file,
-    # but it is essential for deployment.
     try:
         api_key = st.secrets["GEMINI_API_KEY"]
-        st.success("API key found!", icon="✅")
     except:
         st.error("Gemini API key not found. Please add it to your Streamlit secrets.", icon="🚨")
         api_key = None
@@ -107,19 +108,6 @@ with st.sidebar:
     risk_profile = st.selectbox("Select your risk profile", ('Conservative', 'Moderate', 'Aggressive'))
     analyze_button = st.button("Analyze Portfolio", type="primary")
 
-if analyze_button:
-    if not api_key:
-        st.warning("Cannot proceed without a configured Gemini API key.", icon="⚠️")
-    elif not uploaded_file:
-        st.warning("Please upload your portfolio file or screenshot.", icon="⚠️")
-    else:
-        # (The rest of the logic remains exactly the same)
-        with st.spinner("The AI is analyzing your portfolio... This may take a moment..."):
-            # ... (rest of the file processing and API calling logic)
-            # Make sure to pass the 'api_key' variable to your get_gemini_analysis function
-            pass # The logic here is identical to the previous version
-            
-# Full logic for button press
 if analyze_button:
     if not api_key:
         st.warning("Cannot proceed without a configured Gemini API key.", icon="⚠️")
@@ -142,4 +130,5 @@ if analyze_button:
                     st.switch_page("pages/1_Sector_Allocation.py")
 
             except Exception as e:
+                # This is the line that was corrected. The 's' has been removed.
                 st.error(f"An error occurred while processing your file: {e}", icon="🚨")
